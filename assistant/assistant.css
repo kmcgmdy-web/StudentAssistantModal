@@ -1,40 +1,34 @@
-/* -----------------------------------------------------
-   Student Assistant — Figma-style UI
------------------------------------------------------- */
-
-/* BUTTON */
+/* ------------------------------------------
+   STUDENT ASSISTANT — BUTTON IN WIDGET
+------------------------------------------- */
 .sa-button {
-  background: linear-gradient(90deg, #7b2ff7, #00c6ff);
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  border: none;
-  border-radius: 14px;
-  padding: 12px 22px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 32px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: transform .15s ease;
 }
 
 .sa-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
 }
 
-.sa-button-ready {
-  opacity: 1 !important;
-}
-
-/* -----------------------------------------------------
-   MODAL CONTAINER
------------------------------------------------------- */
+/* ------------------------------------------
+   MODAL ROOT + BACKDROP
+------------------------------------------- */
 
 #sa-modal-root {
   position: fixed;
   inset: 0;
-  z-index: 999999;
+  z-index: 999999999;
   display: none;
 }
 
@@ -42,133 +36,168 @@
   display: block;
 }
 
-/* Backdrop */
 .sa-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.15); /* light overlay, NO blur */
+  backdrop-filter: none;
 }
 
-/* Modal box */
+/* ------------------------------------------
+   MODAL CONTAINER
+------------------------------------------- */
+
 .sa-modal {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  right: 24px;
+  bottom: 24px;
   width: 420px;
   height: 620px;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  animation: sa-slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+  animation: sa-slide-up .28s ease-out;
 }
 
-/* Slide-in animation */
-@keyframes sa-slide-in {
-  from {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+@keyframes sa-slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* HEADER */
+/* ------------------------------------------
+   HEADER
+------------------------------------------- */
+
 .sa-header {
-  background: linear-gradient(90deg, #7b2ff7, #00c6ff);
-  color: white;
   padding: 14px 18px;
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+  color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-weight: 600;
 }
 
 .sa-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
-  font-weight: 600;
 }
 
 .sa-close-btn {
   background: transparent;
   border: none;
-  font-size: 20px;
-  color: white;
   cursor: pointer;
-  opacity: 0.8;
+  font-size: 18px;
+  color: white;
+  padding: 4px;
+  opacity: .9;
 }
 
 .sa-close-btn:hover {
   opacity: 1;
 }
 
-/* BODY */
+/* ------------------------------------------
+   BODY / MESSAGES AREA
+------------------------------------------- */
+
 .sa-body {
-  padding: 16px;
-  overflow-y: auto;
   flex: 1;
+  padding: 18px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.sa-message {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  margin-bottom: 14px; /* better bubble spacing */
+  max-width: 90%;
 }
 
 .sa-message.assistant {
-  background: #f5f5f5;
-  padding: 12px 14px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-  font-size: 15px;
-  color: #444;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #333;
 }
 
-/* Suggestions */
+.sa-message.user {
+  background: #8b5cf6;
+  color: white;
+  margin-left: auto; /* right-align user message */
+}
+
+/* ------------------------------------------
+   CTA SUGGESTION BUTTONS
+------------------------------------------- */
+
 .sa-suggestions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px; /* ensure readable spacing */
 }
 
 .sa-suggestion {
-  padding: 12px 14px;
-  background: white;
-  border-radius: 10px;
-  border: 2px solid #e3e3ff;
-  cursor: pointer;
+  width: 100%;
   text-align: left;
-  font-size: 14px;
-  transition: all 0.15s ease;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid #dcd8ff;
+  background: #fff;
+  font-size: 15px;
+  color: #444;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease;
 }
 
 .sa-suggestion:hover {
-  border-color: #7b2ff7;
-  background: #faf7ff;
+  border-color: #8b5cf6;
+  background: #f9f5ff;
 }
 
-/* FOOTER */
+/* ------------------------------------------
+   FOOTER INPUT AREA
+------------------------------------------- */
+
 .sa-footer {
-  border-top: 1px solid #eee;
-  padding: 12px;
+  padding: 14px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  border-top: 1px solid #eee;
+  background: #fff;
 }
 
 .sa-input {
   flex: 1;
-  padding: 10px 12px;
-  font-size: 15px;
-  border: 1px solid #ddd;
+  padding: 12px;
   border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
 }
 
 .sa-send {
-  background: #00c6ff;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   border: none;
+  background: #06b6d4;
   color: white;
-  padding: 10px 12px;
-  border-radius: 10px;
+  font-size: 20px;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background .2s;
 }
+
 .sa-send:hover {
-  background: #00a8dd;
+  background: #0891b2;
 }
