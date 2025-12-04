@@ -1,5 +1,5 @@
 /* ------------------------------------------
-   STUDENT ASSISTANT — BUTTON IN WIDGET
+   BUTTON IN WIDGET
 ------------------------------------------- */
 .sa-button {
   display: inline-flex;
@@ -16,38 +16,34 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   transition: transform .15s ease;
 }
-
 .sa-button:hover {
   transform: translateY(-1px);
 }
 
 /* ------------------------------------------
-   MODAL ROOT + BACKDROP
+   MODAL ROOT (JS creates #sa-modal)
 ------------------------------------------- */
-
-#sa-modal-root {
+#sa-modal {
   position: fixed;
   inset: 0;
   z-index: 999999999;
-  display: none;
-}
-
-#sa-modal-root.sa-modal-open {
-  display: block;
-}
-
-.sa-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.15); /* light overlay, NO blur */
-  backdrop-filter: none;
 }
 
 /* ------------------------------------------
-   MODAL CONTAINER
+   BACKDROP (JS uses .sa-backdrop)
 ------------------------------------------- */
+.sa-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: none;
+  z-index: 999999998;
+}
 
-.sa-modal {
+/* ------------------------------------------
+   MODAL WINDOW (JS uses .sa-window)
+------------------------------------------- */
+.sa-window {
   position: fixed;
   right: 24px;
   bottom: 24px;
@@ -60,6 +56,7 @@
   flex-direction: column;
   box-shadow: 0 10px 28px rgba(0,0,0,0.22);
   animation: sa-slide-up .28s ease-out;
+  z-index: 999999999;
 }
 
 @keyframes sa-slide-up {
@@ -68,9 +65,8 @@
 }
 
 /* ------------------------------------------
-   HEADER
+   HEADER (JS uses .sa-header)
 ------------------------------------------- */
-
 .sa-header {
   padding: 14px 18px;
   background: linear-gradient(90deg, #8b5cf6, #06b6d4);
@@ -80,14 +76,9 @@
   align-items: center;
   font-weight: 600;
 }
-
 .sa-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 15px;
 }
-
 .sa-close-btn {
   background: transparent;
   border: none;
@@ -97,54 +88,55 @@
   padding: 4px;
   opacity: .9;
 }
-
 .sa-close-btn:hover {
   opacity: 1;
 }
 
 /* ------------------------------------------
-   BODY / MESSAGES AREA
+   MESSAGES AREA (JS uses #sa-messages)
 ------------------------------------------- */
-
-.sa-body {
+#sa-messages {
   flex: 1;
   padding: 18px;
   overflow-y: auto;
   background: #fff;
 }
 
-.sa-message {
+/* message bubbles (JS uses .sa-msg) */
+.sa-msg {
   padding: 12px 14px;
   border-radius: 10px;
   font-size: 14px;
   line-height: 1.45;
-  margin-bottom: 14px; /* better bubble spacing */
+  margin-bottom: 14px;
   max-width: 90%;
 }
-
-.sa-message.assistant {
+.sa-msg.user-msg {
+  background: #8b5cf6;
+  color: white;
+  margin-left: auto;
+}
+.sa-msg.bot-msg {
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   color: #333;
 }
 
-.sa-message.user {
-  background: #8b5cf6;
-  color: white;
-  margin-left: auto; /* right-align user message */
-}
-
 /* ------------------------------------------
-   CTA SUGGESTION BUTTONS
+   CTA CONTAINERS (JS uses .sa-cta-container)
 ------------------------------------------- */
-
-.sa-suggestions {
+.sa-cta-container {
+  padding: 12px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px; /* ensure readable spacing */
+  gap: 12px;
+}
+.hidden {
+  display: none !important;
 }
 
-.sa-suggestion {
+/* CTA buttons (JS uses .sa-cta) */
+.sa-cta {
   width: 100%;
   text-align: left;
   padding: 14px;
@@ -153,37 +145,32 @@
   background: #fff;
   font-size: 15px;
   color: #444;
-  line-height: 1.4;
   cursor: pointer;
   transition: border-color .2s ease, background .2s ease;
 }
-
-.sa-suggestion:hover {
+.sa-cta:hover {
   border-color: #8b5cf6;
   background: #f9f5ff;
 }
 
 /* ------------------------------------------
-   FOOTER INPUT AREA
+   INPUT AREA (JS uses .sa-input-area)
 ------------------------------------------- */
-
-.sa-footer {
+.sa-input-area {
   padding: 14px;
   display: flex;
   gap: 10px;
   border-top: 1px solid #eee;
   background: #fff;
 }
-
-.sa-input {
+#sa-input {
   flex: 1;
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
   font-size: 14px;
 }
-
-.sa-send {
+.sa-send-btn {
   width: 46px;
   height: 46px;
   border-radius: 12px;
@@ -197,7 +184,6 @@
   align-items: center;
   transition: background .2s;
 }
-
-.sa-send:hover {
+.sa-send-btn:hover {
   background: #0891b2;
 }
