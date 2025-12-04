@@ -22,19 +22,22 @@ function bindLaunchButton() {
 setInterval(bindLaunchButton, 300);
 
 /* ---------------------------------------------------------
-   OPEN MODAL
+   CREATE + OPEN MODAL
 --------------------------------------------------------- */
 function openAssistantModal() {
-  // Always remove any broken leftover modal
-  const old = document.getElementById("sa-modal");
-  if (old) old.remove();
+
+  // Remove any leftover modal before creating new one
+  const existing = document.getElementById("sa-modal");
+  if (existing) existing.remove();
 
   const modal = document.createElement("div");
   modal.id = "sa-modal";
+
   modal.innerHTML = `
     <div class="sa-backdrop"></div>
 
     <div class="sa-window">
+
       <div class="sa-header">
         <div class="sa-title">✨ Student Assistant</div>
         <button class="sa-close-btn" id="sa-close">✕</button>
@@ -46,53 +49,39 @@ function openAssistantModal() {
         </div>
       </div>
 
-      <div id="sa-cta-initial" class="sa-cta-container">
-        <button class="sa-cta">Can you help me understand this?</button>
-        <button class="sa-cta">What is this concept really about?</button>
-        <button class="sa-cta">Can we break this down step by step?</button>
-      </div>
-
-      <div id="sa-cta-followup" class="sa-cta-container hidden">
-        <button class="sa-cta">What should I focus on here?</button>
-        <button class="sa-cta">Can you give me an example?</button>
-        <button class="sa-cta">I'm still stuck — try another way.</button>
-      </div>
-
       <div class="sa-input-area">
         <input id="sa-input" type="text" placeholder="Type your question…" />
         <button id="sa-send" class="sa-send-btn">➤</button>
       </div>
+
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  // Bind modal close
+  // Close modal
   document.getElementById("sa-close").onclick = () => modal.remove();
 
-  // Bind CTAs
-  document.querySelectorAll(".sa-cta").forEach(btn =>
-    btn.addEventListener("click", () => handleUserMessage(btn.innerText))
-  );
-
-  // Bind send button
+  // Send button
   document.getElementById("sa-send").onclick = sendTypedMessage;
 
-  // Bind Enter key
-  document
-    .getElementById("sa-input")
-    .addEventListener("keypress", e => e.key === "Enter" && sendTypedMessage());
+  // Enter key
+  document.getElementById("sa-input")
+    .addEventListener("keypress", e => {
+      if (e.key === "Enter") sendTypedMessage();
+    });
 }
 
 /* ---------------------------------------------------------
-   MESSAGE HELPERS
+   APPEND MESSAGES
 --------------------------------------------------------- */
 function addUserMessage(text) {
   const box = document.getElementById("sa-messages");
   box.innerHTML += `
     <div class="sa-msg-row user">
       <div class="sa-msg user-msg">${text}</div>
-    </div>`;
+    </div>
+  `;
   box.scrollTop = box.scrollHeight;
 }
 
@@ -101,7 +90,8 @@ function addAssistantMessage(text) {
   box.innerHTML += `
     <div class="sa-msg-row bot">
       <div class="sa-msg bot-msg">${text}</div>
-    </div>`;
+    </div>
+  `;
   box.scrollTop = box.scrollHeight;
 }
 
@@ -113,57 +103,46 @@ function sendTypedMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  handleUserMessage(text);
-  input.value = "";
-}
-
-function handleUserMessage(text) {
   addUserMessage(text);
-  showFollowups();
+  input.value = "";
 
   const reply = generateGenericTutorResponse(text);
+
   setTimeout(() => addAssistantMessage(reply), 450);
 }
 
 /* ---------------------------------------------------------
-   SHOW FOLLOW-UP CTAs
---------------------------------------------------------- */
-function showFollowups() {
-  document.getElementById("sa-cta-initial").classList.add("hidden");
-  document.getElementById("sa-cta-followup").classList.remove("hidden");
-}
-
-/* ---------------------------------------------------------
-   GENERIC GUIDE-ON-THE-SIDE TUTORING ENGINE
+   GENERIC GUIDE-ON-THE-SIDE LOGIC
 --------------------------------------------------------- */
 function generateGenericTutorResponse(msg) {
+
   const q = msg.toLowerCase();
 
   if (q.includes("what")) {
-    return "Let’s get clear on the core idea. What is this concept trying to help you do as a learner or future professional?";
+    return "Let’s get clear on the core idea. What is this concept trying to help you do in practice?";
   }
 
-  if (q.includes("how") || q.includes("step")) {
-    return "Let's walk through this step by step. What do you think the *first step* might be?";
+  if (q.includes("how")) {
+    return "Let’s try one step at a time. What do you think the first step might be?";
   }
 
   if (q.includes("example")) {
-    return "Here’s one way to think about it: imagine you’re explaining it to a classmate in simple terms. What would you say first?";
+    return "Imagine explaining it to a classmate. What part would you start with?";
   }
 
   if (q.includes("focus")) {
-    return "Look for the important keywords. They usually point directly to the learning objective. Which words stand out to you?";
+    return "Look for the keywords—those usually point directly to the objective. Which ones stand out?";
   }
 
   if (q.includes("stuck") || q.includes("confused")) {
-    return "No worries — totally normal. Tell me which part feels unclear, and we can tackle it together.";
+    return "Totally fine—tell me which piece feels unclear and we’ll work through it together.";
   }
 
   const defaults = [
-    "Let’s break it down together. What part feels tricky?",
-    "Here’s a simpler way to think about it. What does this concept help you do in real practice?",
-    "Try explaining what you *think* it means — I can help refine it.",
-    "Let’s zoom out. What is the purpose of this topic in the bigger picture?"
+    "Let’s break it down—what part feels tricky?",
+    "Here’s a way to think about it: what does this help you do as a learner or a professional?",
+    "Try saying what you *think* it means—I’ll help refine it.",
+    "Let’s zoom out. What’s the purpose of this topic in the bigger picture?"
   ];
 
   return defaults[Math.floor(Math.random() * defaults.length)];
