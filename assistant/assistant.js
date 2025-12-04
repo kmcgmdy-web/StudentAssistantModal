@@ -1,5 +1,5 @@
 /* -------------------------------------------------------
-   LOAD CSS (CIMA blocks <link>, so inject dynamically)
+   LOAD CSS DYNAMICALLY (CIMA strips <link>)
 ------------------------------------------------------- */
 (function loadCSS() {
   const cssUrl = "https://miladystudentassistantmodal.netlify.app/assistant/assistant.css";
@@ -10,37 +10,47 @@
 })();
 
 /* -------------------------------------------------------
-   BUTTON HOOKUP
+   ATTACH LAUNCH BUTTON
 ------------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("sa-launch-btn");
   if (!btn) return;
-
-  btn.addEventListener("click", () => openStudentAssistantModal());
+  btn.addEventListener("click", openStudentAssistantModal);
 });
 
 /* -------------------------------------------------------
-   CREATE MODAL
+   BUILD & OPEN MODAL
 ------------------------------------------------------- */
 function openStudentAssistantModal() {
   let existing = document.getElementById("sa-modal-root");
+
   if (existing) {
     existing.classList.add("sa-modal-open");
     return;
   }
 
-  const modal = document.createElement("div");
-  modal.id = "sa-modal-root";
-  modal.innerHTML = buildModalHTML();
-  document.body.appendChild(modal);
+  const wrapper = document.createElement("div");
+  wrapper.id = "sa-modal-root";
+  wrapper.innerHTML = buildSAModalHTML();
+  document.body.appendChild(wrapper);
 }
 
 /* -------------------------------------------------------
-   MODAL HTML
+   CLOSE MODAL
 ------------------------------------------------------- */
-function buildModalHTML() {
+function closeSAModal() {
+  const modal = document.getElementById("sa-modal-root");
+  if (!modal) return;
+  modal.classList.remove("sa-modal-open");
+}
+
+/* -------------------------------------------------------
+   MODAL HTML (UI ONLY — LOGIC BELOW)
+------------------------------------------------------- */
+function buildSAModalHTML() {
   return `
     <div class="sa-modal-backdrop"></div>
+
     <div class="sa-modal">
       <div class="sa-header">
         <span class="sa-title">✨ Student Assistant</span>
@@ -71,52 +81,10 @@ function buildModalHTML() {
   `;
 }
 
-function closeSAModal() {
-  document.getElementById("sa-modal-root").classList.remove("sa-modal-open");
-}
-
 /* -------------------------------------------------------
-   CTA ROUTING (FAKE AI)
+   HELPERS — ADD MESSAGE BUBBLES
 ------------------------------------------------------- */
-function saHandleCTA(type) {
-  let response = "";
 
-  if (type === "hint") {
-    response = "Here’s a hint: Life skills are abilities that help people succeed personally and professionally. Think about skills that support daily decision-making, communication, or long-term goals. Which of those ideas connect to your question?";
-  }
-
-  if (type === "stuck") {
-    response = "Totally fine to feel stuck! Try breaking the question into pieces. What is it *really* asking about—decision making, self-management, professionalism, communication, or goals? Starting there often makes the rest clearer.";
-  }
-
-  if (type === "focus") {
-    response = "Look for keywords related to responsibility, attitude, professionalism, or habits. These usually signal Life Skills concepts. Which words in your question stand out the most?";
-  }
-
-  saAddAssistantMessage(response);
-}
-
-/* -------------------------------------------------------
-   SEND USER MESSAGE
-------------------------------------------------------- */
-function saSendUserMessage() {
-  const input = document.getElementById("sa-input");
-  const text = input.value.trim();
-  if (!text) return;
-
-  saAddUserMessage(text);
-  input.value = "";
-
-  // Fake AI delay for realism
-  setTimeout(() => {
-    const reply = saGenerateLifeSkillsResponse(text);
-    saAddAssistantMessage(reply);
-  }, 550);
-}
-
-/* -------------------------------------------------------
-   ADDING MESSAGES
-------------------------------------------------------- */
 function saAddUserMessage(text) {
   const body = document.getElementById("sa-body");
   const bubble = document.createElement("div");
@@ -136,53 +104,97 @@ function saAddAssistantMessage(text) {
 }
 
 /* -------------------------------------------------------
-   FAKE AI (Life Skills Logic)
+   CTA LOGIC — USER MESSAGE FIRST, THEN TUTOR REPLY
 ------------------------------------------------------- */
 
-function saGenerateLifeSkillsResponse(message) {
-  const lower = message.toLowerCase();
+function saHandleCTA(type) {
+  let userText = "";
+  let tutorReply = "";
 
-  // ——— Topic Routing ———
-
-  if (lower.includes("goal") || lower.includes("goals")) {
-    return "Goal setting is a core Life Skill. A strong goal is specific, realistic, and supported by a plan. What is the real purpose of the goal in your question—short-term focus, long-term planning, or personal motivation?";
+  if (type === "hint") {
+    userText = "Can you give me a hint?";
+    tutorReply =
+      "Here’s a hint: Life skills are abilities that help people succeed personally and professionally. Think about habits that support good decisions, communication, or long-term goals. Which of those fits your question?";
   }
 
-  if (lower.includes("time") || lower.includes("manage")) {
-    return "Time management helps students stay organized and reduce stress. Try asking yourself: does the question relate to prioritizing tasks, scheduling, or avoiding procrastination?";
+  if (type === "stuck") {
+    userText = "I'm stuck, can you help me think through this?";
+    tutorReply =
+      "Totally fine to feel stuck! Try breaking the question into pieces. Is it asking about communication, professionalism, responsibility, or self-management? Once you identify the core skill, the rest becomes clearer.";
   }
 
-  if (lower.includes("communication") || lower.includes("communicate")) {
-    return "Communication is more than talking—it's listening, empathy, clarity, and tone. Think: is your question about expressing yourself, resolving conflict, or building professional relationships?";
+  if (type === "focus") {
+    userText = "What should I focus on in this question?";
+    tutorReply =
+      "Look for keywords related to responsibility, attitude, professionalism, or habits. These are strong clues that you're dealing with a Life Skills question. Which key words jump out at you?";
   }
 
-  if (lower.includes("professional") || lower.includes("attitude") || lower.includes("behavior")) {
-    return "Professionalism in Life Skills refers to reliability, respect, integrity, and consistency. Which behaviors in your question align—or don’t—with professional expectations?";
+  // Add user message bubble
+  saAddUserMessage(userText);
+
+  // Add tutor response after a short delay
+  setTimeout(() => {
+    saAddAssistantMessage(tutorReply);
+  }, 450);
+}
+
+/* -------------------------------------------------------
+   SEND USER TEXT + GENERATE AI-LIKE RESPONSE
+------------------------------------------------------- */
+
+function saSendUserMessage() {
+  const input = document.getElementById("sa-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  saAddUserMessage(text);
+  input.value = "";
+
+  setTimeout(() => {
+    const reply = saGenerateLifeSkillsReply(text);
+    saAddAssistantMessage(reply);
+  }, 450);
+}
+
+/* -------------------------------------------------------
+   “FAKE AI” LIFE SKILLS TUTORING ENGINE
+------------------------------------------------------- */
+
+function saGenerateLifeSkillsReply(msg) {
+  const q = msg.toLowerCase();
+
+  // Topic Matchers
+  if (q.includes("goal")) {
+    return "Strong goals are specific, realistic, and tied to a clear purpose. Is the question asking about long-term planning, short-term focus, or personal motivation?";
   }
 
-  if (lower.includes("stress") || lower.includes("anxiety") || lower.includes("cope")) {
-    return "Stress management is a key Life Skill. Strategies include organization, breaks, positive self-talk, and asking for support. What part of the situation in your question is causing the pressure?";
+  if (q.includes("time") || q.includes("manage")) {
+    return "Time management helps reduce stress and improve performance. Does the question relate to prioritizing, scheduling, or avoiding procrastination?";
   }
 
-  if (lower.includes("study") || lower.includes("learning")) {
-    return "Effective study habits include note-taking, reviewing frequently, and learning in small sections. What about the question relates to learning challenges or techniques?";
+  if (q.includes("communication")) {
+    return "Communication involves clarity, listening, empathy, and tone. What aspect of communication is relevant here—expressing yourself, resolving conflict, or understanding others?";
   }
 
-  if (lower.includes("ph") || lower.includes("chemistry")) {
-    return "Even though pH is chemistry, Life Skills thinking still applies. Try breaking the concept down into smaller steps. What part of pH balance feels unclear—acid vs alkali, scale, or how it affects hair?";
+  if (q.includes("professional")) {
+    return "Professionalism is about reliability, respect, integrity, and consistent behavior. Which behaviors in your question support or weaken professionalism?";
   }
 
-  if (lower.includes("help") || lower.includes("confused") || lower.includes("explain")) {
-    return "No problem! Start by identifying the key concept the question is testing—decision making, communication, professionalism, responsibility, or self-management. Which of those fits best?";
+  if (q.includes("stress") || q.includes("cope")) {
+    return "Stress management is a key Life Skill. Strategies include organization, breaks, positive mindset, and seeking support. What part of the situation seems most challenging?";
   }
 
-  // Default tutoring
+  if (q.includes("study") || q.includes("learn")) {
+    return "Effective study habits include active note-taking, reviewing regularly, and breaking content into smaller pieces. What learning challenge is the question hinting at?";
+  }
+
+  // Default fallback responses
   const defaults = [
-    "Think about the underlying Life Skill the question is targeting—communication, problem-solving, professionalism, or emotional awareness. Which one seems most relevant here?",
-    "Try eliminating options that are clearly not related to long-term personal or professional success. What remains?",
-    "Ask yourself: does this option build a habit or mindset that would help someone succeed in school or a career?",
-    "Look at the keywords. Life Skills questions often highlight responsibility, awareness, planning, or behavior. Which keywords stand out to you?",
-    "Great question! What’s the core Life Skill being tested—self-management, communication, or critical thinking?"
+    "Try identifying which Life Skill the question is testing—communication, decision-making, responsibility, or professionalism. Which one seems most relevant?",
+    "Eliminate answers that don’t relate to long-term success or personal growth. What remains is usually closer to the correct concept.",
+    "Think about whether the option helps someone develop habits that support school, work, or personal life. Does that help you narrow it down?",
+    "Look at the keywords. Life Skills questions often reference responsibility, awareness, or interpersonal behavior. Which keywords stand out to you?",
+    "Consider the core skill behind the question—self-management, communication, or critical thinking. Which direction is it pointing you?"
   ];
 
   return defaults[Math.floor(Math.random() * defaults.length)];
