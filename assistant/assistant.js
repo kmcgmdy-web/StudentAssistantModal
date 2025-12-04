@@ -1,200 +1,152 @@
-/* -------------------------------------------------------
-   LOAD CSS DYNAMICALLY (CIMA strips <link>)
-------------------------------------------------------- */
-(function loadCSS() {
-  const cssUrl = "https://miladystudentassistantmodal.netlify.app/assistant/assistant.css";
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = cssUrl;
-  document.head.appendChild(link);
-})();
+/* ---------------------------------------------------------
+   STUDENT ASSISTANT MODAL — UNIVERSAL GUIDE ON THE SIDE
+   Fully client-side prototype with generic tutoring logic
+   --------------------------------------------------------- */
 
-/* -------------------------------------------------------
-   ATTACH LAUNCH BUTTON
-------------------------------------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("sa-launch-btn");
-  if (!btn) return;
-  btn.addEventListener("click", openStudentAssistantModal);
+/* ========== Modal Launch ========== */
+document.addEventListener("DOMContentLoaded", function () {
+  const launchBtn = document.getElementById("sa-launch-btn");
+  if (launchBtn) {
+    launchBtn.addEventListener("click", openAssistantModal);
+  }
 });
 
-/* -------------------------------------------------------
-   BUILD & OPEN MODAL
-------------------------------------------------------- */
-function openStudentAssistantModal() {
-  let existing = document.getElementById("sa-modal-root");
+/* Create Modal Container */
+function openAssistantModal() {
+  if (document.getElementById("sa-modal")) return;
 
-  if (existing) {
-    existing.classList.add("sa-modal-open");
-    return;
-  }
+  const modal = document.createElement("div");
+  modal.id = "sa-modal";
+  modal.innerHTML = `
+    <div class="sa-backdrop"></div>
 
-  const wrapper = document.createElement("div");
-  wrapper.id = "sa-modal-root";
-  wrapper.innerHTML = buildSAModalHTML();
-  document.body.appendChild(wrapper);
-}
-
-/* -------------------------------------------------------
-   CLOSE MODAL
-------------------------------------------------------- */
-function closeSAModal() {
-  const modal = document.getElementById("sa-modal-root");
-  if (!modal) return;
-  modal.classList.remove("sa-modal-open");
-}
-
-/* -------------------------------------------------------
-   MODAL HTML (UI ONLY — LOGIC BELOW)
-------------------------------------------------------- */
-function buildSAModalHTML() {
-  return `
-    <div class="sa-modal-backdrop"></div>
-
-    <div class="sa-modal">
+    <div class="sa-window">
+      <!-- Header -->
       <div class="sa-header">
-        <span class="sa-title">✨ Student Assistant</span>
-        <button class="sa-close-btn" onclick="closeSAModal()">✖</button>
+        <div class="sa-title">✨ Student Assistant</div>
+        <button class="sa-close-btn" id="sa-close">✕</button>
       </div>
 
-      <div id="sa-body" class="sa-body">
-        <div class="sa-message assistant">How can I help you?</div>
+      <!-- Messages -->
+      <div class="sa-messages" id="sa-messages"></div>
 
-        <div class="sa-suggestions">
-          <button class="sa-suggestion" onclick="saHandleCTA('hint')">
-            Can you give me a hint?
-          </button>
-          <button class="sa-suggestion" onclick="saHandleCTA('stuck')">
-            I'm stuck, can you help me think through this?
-          </button>
-          <button class="sa-suggestion" onclick="saHandleCTA('focus')">
-            What should I focus on in this question?
-          </button>
-        </div>
+      <!-- CTA Buttons -->
+      <div class="sa-cta-container" id="sa-cta-initial">
+        <button class="sa-cta">Can you help me understand this?</button>
+        <button class="sa-cta">What is this concept really about?</button>
+        <button class="sa-cta">Can we break this down step by step?</button>
       </div>
 
-      <div class="sa-footer">
-        <input id="sa-input" class="sa-input" placeholder="Type your question…" />
-        <button class="sa-send" onclick="saSendUserMessage()">➤</button>
+      <div class="sa-cta-container hidden" id="sa-cta-followup">
+        <button class="sa-cta">What should I focus on here?</button>
+        <button class="sa-cta">Can you give me an example?</button>
+        <button class="sa-cta">I'm still stuck — try another way.</button>
+      </div>
+
+      <!-- Input -->
+      <div class="sa-input-area">
+        <input id="sa-input" type="text" placeholder="Type your question…" />
+        <button id="sa-send" class="sa-send-btn">➤</button>
       </div>
     </div>
   `;
+
+  document.body.appendChild(modal);
+
+  // Event listeners
+  document.getElementById("sa-close").onclick = () => modal.remove();
+  document.querySelectorAll(".sa-cta").forEach(btn => {
+    btn.addEventListener("click", () => handleUserMessage(btn.innerText));
+  });
+
+  document.getElementById("sa-send").onclick = sendTypedMessage;
+  document.getElementById("sa-input").addEventListener("keypress", e => {
+    if (e.key === "Enter") sendTypedMessage();
+  });
+
+  addAssistantMessage("How can I help you?");
 }
 
-/* -------------------------------------------------------
-   HELPERS — ADD MESSAGE BUBBLES
-------------------------------------------------------- */
-
-function saAddUserMessage(text) {
-  const body = document.getElementById("sa-body");
-  const bubble = document.createElement("div");
-  bubble.className = "sa-message user";
-  bubble.textContent = text;
-  body.appendChild(bubble);
-  body.scrollTop = body.scrollHeight;
+/* ========== Messaging UI ========== */
+function addUserMessage(text) {
+  const box = document.getElementById("sa-messages");
+  box.innerHTML += `
+    <div class="sa-msg-row user">
+      <div class="sa-msg user-msg">${text}</div>
+    </div>
+  `;
+  box.scrollTop = box.scrollHeight;
 }
 
-function saAddAssistantMessage(text) {
-  const body = document.getElementById("sa-body");
-  const bubble = document.createElement("div");
-  bubble.className = "sa-message assistant";
-  bubble.textContent = text;
-  body.appendChild(bubble);
-  body.scrollTop = body.scrollHeight;
+function addAssistantMessage(text) {
+  const box = document.getElementById("sa-messages");
+  box.innerHTML += `
+    <div class="sa-msg-row bot">
+      <div class="sa-msg bot-msg">${text}</div>
+    </div>
+  `;
+  box.scrollTop = box.scrollHeight;
 }
 
-/* -------------------------------------------------------
-   CTA LOGIC — USER MESSAGE FIRST, THEN TUTOR REPLY
-------------------------------------------------------- */
-
-function saHandleCTA(type) {
-  let userText = "";
-  let tutorReply = "";
-
-  if (type === "hint") {
-    userText = "Can you give me a hint?";
-    tutorReply =
-      "Here’s a hint: Life skills are abilities that help people succeed personally and professionally. Think about habits that support good decisions, communication, or long-term goals. Which of those fits your question?";
-  }
-
-  if (type === "stuck") {
-    userText = "I'm stuck, can you help me think through this?";
-    tutorReply =
-      "Totally fine to feel stuck! Try breaking the question into pieces. Is it asking about communication, professionalism, responsibility, or self-management? Once you identify the core skill, the rest becomes clearer.";
-  }
-
-  if (type === "focus") {
-    userText = "What should I focus on in this question?";
-    tutorReply =
-      "Look for keywords related to responsibility, attitude, professionalism, or habits. These are strong clues that you're dealing with a Life Skills question. Which key words jump out at you?";
-  }
-
-  // Add user message bubble
-  saAddUserMessage(userText);
-
-  // Add tutor response after a short delay
-  setTimeout(() => {
-    saAddAssistantMessage(tutorReply);
-  }, 450);
-}
-
-/* -------------------------------------------------------
-   SEND USER TEXT + GENERATE AI-LIKE RESPONSE
-------------------------------------------------------- */
-
-function saSendUserMessage() {
+/* ========== User Input Handling ========== */
+function sendTypedMessage() {
   const input = document.getElementById("sa-input");
-  const text = input.value.trim();
+  let text = input.value.trim();
   if (!text) return;
 
-  saAddUserMessage(text);
+  handleUserMessage(text);
   input.value = "";
-
-  setTimeout(() => {
-    const reply = saGenerateLifeSkillsReply(text);
-    saAddAssistantMessage(reply);
-  }, 450);
 }
 
-/* -------------------------------------------------------
-   “FAKE AI” LIFE SKILLS TUTORING ENGINE
-------------------------------------------------------- */
+function handleUserMessage(text) {
+  addUserMessage(text);
+  showFollowupCTAs();
 
-function saGenerateLifeSkillsReply(msg) {
-  const q = msg.toLowerCase();
+  const response = generateTutorResponse(text);
+  setTimeout(() => addAssistantMessage(response), 500);
+}
 
-  // Topic Matchers
-  if (q.includes("goal")) {
-    return "Strong goals are specific, realistic, and tied to a clear purpose. Is the question asking about long-term planning, short-term focus, or personal motivation?";
+/* ========== CTA Visibility ========== */
+function showFollowupCTAs() {
+  document.getElementById("sa-cta-initial").classList.add("hidden");
+  document.getElementById("sa-cta-followup").classList.remove("hidden");
+}
+
+/* ========== Tutoring Logic (Universal Guide-on-the-Side) ========== */
+function generateTutorResponse(input) {
+  const msg = input.toLowerCase();
+
+  /* Clarification questions */
+  if (msg.includes("what")) {
+    return "Great question. Let's start with the core idea. Think about what the concept is *trying to help you do* as a future professional. What part of it feels unclear?";
   }
 
-  if (q.includes("time") || q.includes("manage")) {
-    return "Time management helps reduce stress and improve performance. Does the question relate to prioritizing, scheduling, or avoiding procrastination?";
+  /* Process / How */
+  if (msg.includes("how") || msg.includes("steps")) {
+    return "Let's break it down step by step. Imagine you're performing this skill in real life. What’s the very first thing you'd need to understand or prepare?";
   }
 
-  if (q.includes("communication")) {
-    return "Communication involves clarity, listening, empathy, and tone. What aspect of communication is relevant here—expressing yourself, resolving conflict, or understanding others?";
+  /* Stuck / Confused */
+  if (msg.includes("confused") || msg.includes("stuck") || msg.includes("don't")) {
+    return "Totally normal. Let's simplify it. What part do you already understand, even a little? We can build from there.";
   }
 
-  if (q.includes("professional")) {
-    return "Professionalism is about reliability, respect, integrity, and consistent behavior. Which behaviors in your question support or weaken professionalism?";
+  /* Focus */
+  if (msg.includes("focus")) {
+    return "Try pulling out the keywords. They usually point to the real learning objective. Which terms or ideas feel most important here?";
   }
 
-  if (q.includes("stress") || q.includes("cope")) {
-    return "Stress management is a key Life Skill. Strategies include organization, breaks, positive mindset, and seeking support. What part of the situation seems most challenging?";
+  /* Example request */
+  if (msg.includes("example")) {
+    return "Sure. Here’s a general way to think about it: imagine explaining this idea to a client or classmate in one sentence. What would you say?";
   }
 
-  if (q.includes("study") || q.includes("learn")) {
-    return "Effective study habits include active note-taking, reviewing regularly, and breaking content into smaller pieces. What learning challenge is the question hinting at?";
-  }
-
-  // Default fallback responses
+  /* Default generic tutoring scaffold */
   const defaults = [
-    "Try identifying which Life Skill the question is testing—communication, decision-making, responsibility, or professionalism. Which one seems most relevant?",
-    "Eliminate answers that don’t relate to long-term success or personal growth. What remains is usually closer to the correct concept.",
-    "Think about whether the option helps someone develop habits that support school, work, or personal life. Does that help you narrow it down?",
-    "Look at the keywords. Life Skills questions often reference responsibility, awareness, or interpersonal behavior. Which keywords stand out to you?",
-    "Consider the core skill behind the question—self-management, communication, or critical thinking. Which direction is it pointing you?"
+    "Let’s figure this out together. What part feels tricky?",
+    "Here’s a simpler way to think about it. Imagine you're teaching this to a beginner.",
+    "Try saying in your own words what you *think* it means — I’ll help refine it.",
+    "Let’s zoom out: what is the purpose of this concept in real salon or clinic work?",
   ];
 
   return defaults[Math.floor(Math.random() * defaults.length)];
