@@ -1,6 +1,6 @@
-// -------------------------
-// Inject CSS (CIMA blocks <link>)
-// -------------------------
+// -----------------------------------------------------
+// Inject CSS safely (CIMA blocks <link> inside widget)
+// -----------------------------------------------------
 (function loadStudentAssistantCSS() {
   const cssUrl = "https://miladystudentassistantmodal.netlify.app/assistant/assistant.css";
   const link = document.createElement("link");
@@ -9,9 +9,9 @@
   document.head.appendChild(link);
 })();
 
-// -------------------------
-// Wait for widget button
-// -------------------------
+// -----------------------------------------------------
+// Button activation inside widget
+// -----------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("sa-launch-btn");
   if (!btn) return;
@@ -23,32 +23,38 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// -------------------------
-// Build modal on demand
-// -------------------------
+// -----------------------------------------------------
+// Build modal dynamically
+// -----------------------------------------------------
 function openStudentAssistantModal() {
-  // If modal already exists → show again
   let modal = document.getElementById("sa-modal-root");
+
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "sa-modal-root";
     modal.innerHTML = buildStudentAssistantModalHTML();
     document.body.appendChild(modal);
+
+    // Attach close behavior (CIMA strips inline onclick)
+    modal.querySelector(".sa-close-btn").addEventListener("click", () => {
+      modal.classList.remove("sa-modal-open");
+    });
   }
 
   modal.classList.add("sa-modal-open");
 }
 
-// -------------------------
-// Modal HTML
-// -------------------------
+// -----------------------------------------------------
+// Modal HTML:
+// -----------------------------------------------------
 function buildStudentAssistantModalHTML() {
   return `
     <div class="sa-modal-backdrop"></div>
+
     <div class="sa-modal">
       <div class="sa-header">
         <span class="sa-title">✨ Student Assistant</span>
-        <button class="sa-close-btn" onclick="document.getElementById('sa-modal-root').classList.remove('sa-modal-open')">✖</button>
+        <button class="sa-close-btn">✖</button>
       </div>
 
       <div class="sa-body">
