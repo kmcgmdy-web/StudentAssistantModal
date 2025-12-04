@@ -1,19 +1,33 @@
 /* ---------------------------------------------------------
-   STUDENT ASSISTANT MODAL — UNIVERSAL GUIDE ON THE SIDE
-   Fully client-side prototype with generic tutoring logic
-   --------------------------------------------------------- */
+   LOAD CSS SAFELY
+--------------------------------------------------------- */
+(function loadCSS() {
+  const cssUrl = "https://miladystudentassistantmodal.netlify.app/assistant/assistant.css";
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = cssUrl;
+  document.head.appendChild(link);
+})();
 
-/* ========== Modal Launch ========== */
-document.addEventListener("DOMContentLoaded", function () {
-  const launchBtn = document.getElementById("sa-launch-btn");
-  if (launchBtn) {
-    launchBtn.addEventListener("click", openAssistantModal);
+/* ---------------------------------------------------------
+   ENSURE BUTTON ALWAYS GETS BOUND
+--------------------------------------------------------- */
+function bindLaunchButton() {
+  const btn = document.getElementById("sa-launch-btn");
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = "true";
+    btn.addEventListener("click", openAssistantModal);
   }
-});
+}
+setInterval(bindLaunchButton, 300);
 
-/* Create Modal Container */
+/* ---------------------------------------------------------
+   OPEN MODAL
+--------------------------------------------------------- */
 function openAssistantModal() {
-  if (document.getElementById("sa-modal")) return;
+  // Always remove any broken leftover modal
+  const old = document.getElementById("sa-modal");
+  if (old) old.remove();
 
   const modal = document.createElement("div");
   modal.id = "sa-modal";
@@ -21,29 +35,29 @@ function openAssistantModal() {
     <div class="sa-backdrop"></div>
 
     <div class="sa-window">
-      <!-- Header -->
       <div class="sa-header">
         <div class="sa-title">✨ Student Assistant</div>
         <button class="sa-close-btn" id="sa-close">✕</button>
       </div>
 
-      <!-- Messages -->
-      <div class="sa-messages" id="sa-messages"></div>
+      <div id="sa-messages" class="sa-messages">
+        <div class="sa-msg-row bot">
+          <div class="sa-msg bot-msg">How can I help you?</div>
+        </div>
+      </div>
 
-      <!-- CTA Buttons -->
-      <div class="sa-cta-container" id="sa-cta-initial">
+      <div id="sa-cta-initial" class="sa-cta-container">
         <button class="sa-cta">Can you help me understand this?</button>
         <button class="sa-cta">What is this concept really about?</button>
         <button class="sa-cta">Can we break this down step by step?</button>
       </div>
 
-      <div class="sa-cta-container hidden" id="sa-cta-followup">
+      <div id="sa-cta-followup" class="sa-cta-container hidden">
         <button class="sa-cta">What should I focus on here?</button>
         <button class="sa-cta">Can you give me an example?</button>
         <button class="sa-cta">I'm still stuck — try another way.</button>
       </div>
 
-      <!-- Input -->
       <div class="sa-input-area">
         <input id="sa-input" type="text" placeholder="Type your question…" />
         <button id="sa-send" class="sa-send-btn">➤</button>
@@ -53,28 +67,32 @@ function openAssistantModal() {
 
   document.body.appendChild(modal);
 
-  // Event listeners
+  // Bind modal close
   document.getElementById("sa-close").onclick = () => modal.remove();
-  document.querySelectorAll(".sa-cta").forEach(btn => {
-    btn.addEventListener("click", () => handleUserMessage(btn.innerText));
-  });
 
+  // Bind CTAs
+  document.querySelectorAll(".sa-cta").forEach(btn =>
+    btn.addEventListener("click", () => handleUserMessage(btn.innerText))
+  );
+
+  // Bind send button
   document.getElementById("sa-send").onclick = sendTypedMessage;
-  document.getElementById("sa-input").addEventListener("keypress", e => {
-    if (e.key === "Enter") sendTypedMessage();
-  });
 
-  addAssistantMessage("How can I help you?");
+  // Bind Enter key
+  document
+    .getElementById("sa-input")
+    .addEventListener("keypress", e => e.key === "Enter" && sendTypedMessage());
 }
 
-/* ========== Messaging UI ========== */
+/* ---------------------------------------------------------
+   MESSAGE HELPERS
+--------------------------------------------------------- */
 function addUserMessage(text) {
   const box = document.getElementById("sa-messages");
   box.innerHTML += `
     <div class="sa-msg-row user">
       <div class="sa-msg user-msg">${text}</div>
-    </div>
-  `;
+    </div>`;
   box.scrollTop = box.scrollHeight;
 }
 
@@ -83,15 +101,16 @@ function addAssistantMessage(text) {
   box.innerHTML += `
     <div class="sa-msg-row bot">
       <div class="sa-msg bot-msg">${text}</div>
-    </div>
-  `;
+    </div>`;
   box.scrollTop = box.scrollHeight;
 }
 
-/* ========== User Input Handling ========== */
+/* ---------------------------------------------------------
+   USER INPUT HANDLING
+--------------------------------------------------------- */
 function sendTypedMessage() {
   const input = document.getElementById("sa-input");
-  let text = input.value.trim();
+  const text = input.value.trim();
   if (!text) return;
 
   handleUserMessage(text);
@@ -100,53 +119,51 @@ function sendTypedMessage() {
 
 function handleUserMessage(text) {
   addUserMessage(text);
-  showFollowupCTAs();
+  showFollowups();
 
-  const response = generateTutorResponse(text);
-  setTimeout(() => addAssistantMessage(response), 500);
+  const reply = generateGenericTutorResponse(text);
+  setTimeout(() => addAssistantMessage(reply), 450);
 }
 
-/* ========== CTA Visibility ========== */
-function showFollowupCTAs() {
+/* ---------------------------------------------------------
+   SHOW FOLLOW-UP CTAs
+--------------------------------------------------------- */
+function showFollowups() {
   document.getElementById("sa-cta-initial").classList.add("hidden");
   document.getElementById("sa-cta-followup").classList.remove("hidden");
 }
 
-/* ========== Tutoring Logic (Universal Guide-on-the-Side) ========== */
-function generateTutorResponse(input) {
-  const msg = input.toLowerCase();
+/* ---------------------------------------------------------
+   GENERIC GUIDE-ON-THE-SIDE TUTORING ENGINE
+--------------------------------------------------------- */
+function generateGenericTutorResponse(msg) {
+  const q = msg.toLowerCase();
 
-  /* Clarification questions */
-  if (msg.includes("what")) {
-    return "Great question. Let's start with the core idea. Think about what the concept is *trying to help you do* as a future professional. What part of it feels unclear?";
+  if (q.includes("what")) {
+    return "Let’s get clear on the core idea. What is this concept trying to help you do as a learner or future professional?";
   }
 
-  /* Process / How */
-  if (msg.includes("how") || msg.includes("steps")) {
-    return "Let's break it down step by step. Imagine you're performing this skill in real life. What’s the very first thing you'd need to understand or prepare?";
+  if (q.includes("how") || q.includes("step")) {
+    return "Let's walk through this step by step. What do you think the *first step* might be?";
   }
 
-  /* Stuck / Confused */
-  if (msg.includes("confused") || msg.includes("stuck") || msg.includes("don't")) {
-    return "Totally normal. Let's simplify it. What part do you already understand, even a little? We can build from there.";
+  if (q.includes("example")) {
+    return "Here’s one way to think about it: imagine you’re explaining it to a classmate in simple terms. What would you say first?";
   }
 
-  /* Focus */
-  if (msg.includes("focus")) {
-    return "Try pulling out the keywords. They usually point to the real learning objective. Which terms or ideas feel most important here?";
+  if (q.includes("focus")) {
+    return "Look for the important keywords. They usually point directly to the learning objective. Which words stand out to you?";
   }
 
-  /* Example request */
-  if (msg.includes("example")) {
-    return "Sure. Here’s a general way to think about it: imagine explaining this idea to a client or classmate in one sentence. What would you say?";
+  if (q.includes("stuck") || q.includes("confused")) {
+    return "No worries — totally normal. Tell me which part feels unclear, and we can tackle it together.";
   }
 
-  /* Default generic tutoring scaffold */
   const defaults = [
-    "Let’s figure this out together. What part feels tricky?",
-    "Here’s a simpler way to think about it. Imagine you're teaching this to a beginner.",
-    "Try saying in your own words what you *think* it means — I’ll help refine it.",
-    "Let’s zoom out: what is the purpose of this concept in real salon or clinic work?",
+    "Let’s break it down together. What part feels tricky?",
+    "Here’s a simpler way to think about it. What does this concept help you do in real practice?",
+    "Try explaining what you *think* it means — I can help refine it.",
+    "Let’s zoom out. What is the purpose of this topic in the bigger picture?"
   ];
 
   return defaults[Math.floor(Math.random() * defaults.length)];
